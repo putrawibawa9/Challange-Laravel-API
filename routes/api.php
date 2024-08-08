@@ -28,6 +28,12 @@ Route::apiResource('/v1/products', \App\Http\Controllers\ProductController::clas
 // Categories Resource
 Route::apiResource('/v1/categories', \App\Http\Controllers\CategoryController::class)->middleware('auth:sanctum');
 
+// Make Order
+Route::post('/v1/orders', [\App\Http\Controllers\OrderController::class, 'buy'])->middleware('auth:sanctum');
+// Get All Orders
+Route::get('/v1/orders', [\App\Http\Controllers\OrderController::class, 'index'])->middleware('auth:sanctum');
+// Get Single Order
+Route::get('/v1/orders/{id}', [\App\Http\Controllers\OrderController::class, 'show'])->middleware('auth:sanctum');
 
 // Revoking Tokens
 Route::middleware('auth:sanctum')->group(function () {

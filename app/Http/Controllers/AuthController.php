@@ -55,7 +55,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password)
         ]);
-        $abilities = ['read'];
+        $abilities = ['read', 'create'];
         $token = $user->createToken('auth_token', $abilities)->plainTextToken;
 
         return response()->json([
@@ -74,7 +74,7 @@ class AuthController extends Controller
         }
 
         $user = User::where('email', $request->email)->firstOrFail();
-        $abilities = ['read'];
+        $abilities = ['read', 'create'];
         $token = $user->createToken('auth_token', $abilities)->plainTextToken;
 
         return response()->json([
