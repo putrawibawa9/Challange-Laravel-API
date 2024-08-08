@@ -5,12 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\OrderItem;
+use Akaunting\Money\Money;
 use Illuminate\Http\Request;
+use Akaunting\Money\Currency;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\OrderResource;
-use Akaunting\Money\Currency;
-use Akaunting\Money\Money;
+use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
 {
@@ -46,47 +47,62 @@ class OrderController extends Controller
 
     public function buy(Request $request)
     {
-        // Validate the request
-        $request->validate([
-            'id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1',
-        ]);
 
-        // Find the product
-        $product = Product::find($request->id);
+      // Validate the request
+      $validator = Validator::make($request->all(), [
+        'items' => 'required|array',
+        'items.*.product_id' => 'required|',
+        'items.*.quantity' => 'required|integer|min:1'
+      ]);
 
-        // Check if there's enough stock
-        if ($product->stock < $request->quantitiy) {
-            return response()->json(['error' => 'Not enough stock available'], 400);
+    // Check if the validation failed
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
         }
+        //     var_dump($request->items[0]['product_id']);
+        // exit;
+    DB::transaction(function () use ($request) {
+        // Create the order
+        $order = Order::create([
+            'user_id' => Auth::id(),
+            'total_price' => 0 // We'll calculate the total price later
+        ]);
+        $totalPrice = 0;
 
-        // Use a database transaction to ensure data integrity
-        DB::transaction(function () use ($request, $product) {
-            // Create an order
-            $order = Order::create([
-                'user_id' => Auth::id(),
-                'total_price' => $product->price * $request->quantity,
-            ]);
-
+        // Iterate over each item in the request
+        foreach ($request->items as $itemData) {
+            $product = Product::findOrFail($itemData['product_id']);
             // Create an order item
             OrderItem::create([
                 'order_id' => $order->id,
                 'product_id' => $product->id,
-                'quantity' => $request->quantity,
-                'price' => $product->price,
+                'quantity' => $itemData['quantity'],
+                'price' => $product->price
             ]);
 
+            // Update the total price
+            $totalPrice += $product->price * $itemData['quantity'];
             // Decrement the product stock
-            $product->decrement('stock', $request->quantity);
-        });
+            $product->decrement('stock', $itemData['quantity']);
+        }
 
-        $lastOrder = Order::latest()->first();
+        // Update the order's total price
+        $order->update(['total_price' => $totalPrice]);
 
-        // format to USD
-        $lastOrder->total_price = 'Rp.'. number_format($lastOrder->total_price, 0,'','.');
+        // Eager load user and items relation
+        $order->load('user', 'items');
+    });
+    // Retrieve the last order
+    $order = Order::with('items')->latest()->first();
 
-        return new OrderResource('Order placed successfully', [$lastOrder]);
-
-        // Return a success response
+    // Format the total price and each product price to IDR
+    $order->total_price = 'Rp.'. number_format($order->total_price, 0,'','.');
+    foreach ($order->items as $item) {
+        $item->price = 'Rp.'. number_format($item->price, 0,'','.');
+    }
+      return response()->json([
+        'message' => 'Order placed successfully',
+        'data' => $order
+    ]);
     }
 }
