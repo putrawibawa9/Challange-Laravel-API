@@ -14,17 +14,22 @@ use Illuminate\Support\Facades\Route;
 |
 */
 // Admin
-Route::post('/register/admin', [\App\Http\Controllers\AuthController::class, 'registerAdmin']);
-Route::post('/login/admin', [\App\Http\Controllers\AuthController::class, 'loginAdmin']);
+Route::post('/v1/register/admin', [\App\Http\Controllers\AuthController::class, 'registerAdmin']);
+Route::post('/v1/login/admin', [\App\Http\Controllers\AuthController::class, 'loginAdmin']);
 
 // User
-Route::post('/register/user', [\App\Http\Controllers\AuthController::class, 'registerUser']);
-Route::post('/login/user', [\App\Http\Controllers\AuthController::class, 'loginUser']);
+Route::post('/v1/register/user', [\App\Http\Controllers\AuthController::class, 'registerUser']);
+Route::post('/v1/login/user', [\App\Http\Controllers\AuthController::class, 'loginUser']);
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
 
+// Products Resource
+Route::apiResource('/v1/products', \App\Http\Controllers\ProductController::class)->middleware('auth:sanctum');
+
+// Categories Resource
+Route::apiResource('/v1/categories', \App\Http\Controllers\CategoryController::class)->middleware('auth:sanctum');
+
+
+// Revoking Tokens
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'logout']);
 });
