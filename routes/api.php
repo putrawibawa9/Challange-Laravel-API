@@ -35,6 +35,10 @@ Route::get('/v1/orders', [\App\Http\Controllers\OrderController::class, 'index']
 // Get Single Order
 Route::get('/v1/orders/{id}', [\App\Http\Controllers\OrderController::class, 'show'])->middleware('auth:sanctum');
 
+
+
+// Test Payment
+Route::post('/v1/payments', [\App\Http\Controllers\PaymentController::class, 'create']);
 // Revoking Tokens
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'logout']);
