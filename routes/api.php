@@ -37,8 +37,8 @@ Route::get('/v1/orders/{id}', [\App\Http\Controllers\OrderController::class, 'sh
 
 
 
-// Test Payment
-Route::post('/v1/payments', [\App\Http\Controllers\PaymentController::class, 'create']);
+// Test webHook
+Route::post('/v1/webhook', [\App\Services\PaymentService::class, 'webHook']);
 // Revoking Tokens
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'logout']);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Str;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\OrderItem;
@@ -73,6 +74,7 @@ class OrderController extends Controller
         // Create the order
         $order = Order::create([
             'user_id' => Auth::id(),
+            'external_id' => Str::uuid(),
             'total_price' => 0 // We'll calculate the total price later
         ]);
         $totalPrice = 0;
@@ -109,7 +111,7 @@ class OrderController extends Controller
         $item->price = 'Rp.'. number_format($item->price, 0,'','.');
     }
 
-    $invoice = $this->paymentService->createInvoice($order->total_price);
+    $invoice = $this->paymentService->createInvoice($order);
       return response()->json([
         'message' => 'Order placed successfully',
         'data' => $order,
