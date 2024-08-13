@@ -17,6 +17,9 @@ class CategoryController extends Controller
     {
     // check the user's token ability
          $user = Auth::user();
+           if (!$user) {
+        return response()->json(['message' => 'Token not provided or invalid'], 401);
+    }
         // check if the token is valid
            if (!$user->tokenCan('read')) {
             return response()->json(['message' => 'Unauthorized'], 403);

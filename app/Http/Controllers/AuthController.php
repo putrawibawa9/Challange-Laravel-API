@@ -16,7 +16,7 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|max:255|unique:users',
+            'email' => 'email|required|string|max:255|unique:admins',
             'password' => 'required|string|min:8'
         ]);
 
@@ -67,6 +67,14 @@ class AuthController extends Controller
 
     public function loginUser(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+           'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+          if ($validator->fails()) {
+            return response()->json($validator->errors());
+        }
         if (! Auth::attempt($request->only('email', 'password'))) {
             return response()->json([
                 'message' => 'Unauthorized'
