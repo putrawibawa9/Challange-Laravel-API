@@ -1,26 +1,26 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Services;
 
 use Xendit\Configuration;
 use Illuminate\Http\Request;
 use Xendit\Invoice\InvoiceApi;
 use Xendit\Invoice\CreateInvoiceRequest;
 
-class PaymentController extends Controller
+class PaymentService
 {
-    public function __construct()
+
+     public function __construct()
     {
        Configuration::setXenditKey("xnd_development_ATQsiViNZsT2t9SlNMiNUQRpZP16X2nSnRwfmqD1PGFR6DpErOghC9etR3gNfAbj");
     }
-
-
-    public function create(){
+   public function createInvoice($invoiceData){
+    $invoiceData = str_replace(['Rp.', '.'], '', $invoiceData);
         $api = new InvoiceApi();
         $create_invoice_request = new CreateInvoiceRequest([
-            'external_id' => 'test1234',
+            'external_id' => '123',
             'description' => 'Test Invoice',
-            'amount' => 10000,
+            'amount' => $invoiceData,
             'invoice_duration' => 172800,
             'currency' => 'IDR',
             'reminder_time' => 1
@@ -28,7 +28,7 @@ class PaymentController extends Controller
 
             try{
                 $result = $api->createInvoice($create_invoice_request);
-                return response()->json($result['invoice_url']);
+                return $result;
             }catch(\Exception $e){
                 return response()->json($e->getMessage());
             }

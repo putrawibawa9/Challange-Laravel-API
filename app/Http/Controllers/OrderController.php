@@ -11,10 +11,18 @@ use Akaunting\Money\Currency;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\OrderResource;
+use App\Models\Payment;
 use Illuminate\Support\Facades\Validator;
+use App\Services\PaymentService;
 
 class OrderController extends Controller
 {
+    protected $paymentService;
+    public function __construct(PaymentService $paymentService)
+    {
+         $this->paymentService = $paymentService;
+    }
+
     public function index(){
         // Get all orders
      $orders = Order::latest()->get();
@@ -100,9 +108,12 @@ class OrderController extends Controller
     foreach ($order->items as $item) {
         $item->price = 'Rp.'. number_format($item->price, 0,'','.');
     }
+
+    $invoice = $this->paymentService->createInvoice($order->total_price);
       return response()->json([
         'message' => 'Order placed successfully',
-        'data' => $order
+        'data' => $order,
+        'invoice' => $invoice
     ]);
     }
 }
