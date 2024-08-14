@@ -1,1 +1,1 @@
-This is by far the most complicated apps I have been developedgit p
+This is by far the most complicated apps I have been developed
