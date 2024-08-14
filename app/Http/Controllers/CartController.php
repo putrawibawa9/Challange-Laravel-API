@@ -2,10 +2,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cart;
-use App\Models\CartItem;
 use App\Models\Product;
+use App\Models\CartItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class CartController extends Controller
 {
@@ -29,7 +31,7 @@ class CartController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate the request
+       // Validate the request
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
@@ -37,6 +39,7 @@ class CartController extends Controller
 
         $productId = $request->input('product_id');
         $quantity = $request->input('quantity');
+
 
         // Get the authenticated user
         $user = Auth::user();
@@ -68,22 +71,23 @@ class CartController extends Controller
     /**
      * Update the specified cart item.
      */
-    public function update(Request $request, $id)
-    {
-        // Validate the request
-        $request->validate([
-            'quantity' => 'required|integer|min:1',
-        ]);
+   public function update(Request $request, $id)
+{
 
-        // Find the cart item
-        $cartItem = CartItem::findOrFail($id);
+    // Validate the request
+    $request->validate([
+        'quantity' => 'required|integer|min:1',
+    ]);
 
-        // Update the quantity
-        $cartItem->quantity = $request->input('quantity');
-        $cartItem->save();
+    // Find the cart item
+    $cartItem = CartItem::findOrFail($id);
 
-        return response()->json(['message' => 'Cart item updated successfully!'], 200);
-    }
+    // Update the cart item
+    $cartItem->quantity = $request->input('quantity');
+    $cartItem->save();
+
+    return response()->json(['message' => 'Cart item updated successfully!'], 200);
+}
 
     /**
      * Remove the specified cart item from the cart.

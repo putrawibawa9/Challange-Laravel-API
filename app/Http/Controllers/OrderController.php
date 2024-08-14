@@ -68,8 +68,6 @@ class OrderController extends Controller
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
-        //     var_dump($request->items[0]['product_id']);
-        // exit;
     DB::transaction(function () use ($request) {
         // Create the order
         $order = Order::create([

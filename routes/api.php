@@ -20,7 +20,7 @@ Route::apiResource('/v1/products', \App\Http\Controllers\ProductController::clas
 Route::apiResource('/v1/categories', \App\Http\Controllers\CategoryController::class)->middleware('auth:sanctum');
 
 // Add product to cart
-Route::resource('cart', CartController::class)->middleware('auth:sanctum');
+Route::resource('/v1/carts', CartController::class)->middleware('auth:sanctum');
 
 
 // Make Order
