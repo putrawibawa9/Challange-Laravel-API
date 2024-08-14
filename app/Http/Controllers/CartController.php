@@ -29,23 +29,28 @@ class CartController extends Controller
     /**
      * Store a newly created product in the cart (wish-list).
      */
-    public function store(Request $request)
-    {
-       // Validate the request
-        $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1',
-        ]);
+   public function store(Request $request)
+{
+   
+    // Validate the request
+    $request->validate([
+        'items' => 'required|array',
+        'items.*.product_id' => 'required',
+        'items.*.quantity' => 'required|integer|min:1',
+    ]);
 
-        $productId = $request->input('product_id');
-        $quantity = $request->input('quantity');
+    // if validation fails
 
+    // Get the authenticated user
+    $user = Auth::user();
 
-        // Get the authenticated user
-        $user = Auth::user();
+    // Find or create a cart for the user
+    $cart = Cart::firstOrCreate(['user_id' => $user->id]);
 
-        // Find or create a cart for the user
-        $cart = Cart::firstOrCreate(['user_id' => $user->id]);
+    // Iterate over the products array
+    foreach ($request->input('items') as $product) {
+        $productId = $product['product_id'];
+        $quantity = $product['quantity'];
 
         // Check if the product is already in the cart
         $cartItem = CartItem::where('cart_id', $cart->id)
@@ -64,14 +69,16 @@ class CartController extends Controller
                 'quantity' => $quantity,
             ]);
         }
-
-        return response()->json(['message' => 'Product added to cart successfully!'], 200);
     }
+
+    return response()->json(['message' => 'Products added to cart successfully!'], 200);
+}
 
     /**
      * Update the specified cart item.
      */
-   public function update(Request $request, $id)
+
+  public function update(Request $request, $cartItemId)
 {
 
     // Validate the request
@@ -79,14 +86,23 @@ class CartController extends Controller
         'quantity' => 'required|integer|min:1',
     ]);
 
-    // Find the cart item
-    $cartItem = CartItem::findOrFail($id);
+    // Get the authenticated user
+    $user = Auth::user();
 
-    // Update the cart item
+    // Find the cart item
+    $cartItem = CartItem::where('id', $cartItemId)
+        ->whereHas('cart', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })
+        ->firstOrFail();
+
+       
+
+    // Update the quantity
     $cartItem->quantity = $request->input('quantity');
     $cartItem->save();
 
-    return response()->json(['message' => 'Cart item updated successfully!'], 200);
+    return response()->json(['message' => 'Cart item updated successfully!', 'cartItem' => $cartItem], 200);
 }
 
     /**
@@ -94,9 +110,13 @@ class CartController extends Controller
      */
     public function destroy($id)
     {
-        // Find the cart item
-        $cartItem = CartItem::findOrFail($id);
-
+        // Check if the cart item belong to the authenticated user
+        $user = Auth::user();
+        $cartItem = CartItem::where('id', $id)
+            ->whereHas('cart', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->firstOrFail();
         // Delete the cart item
         $cartItem->delete();
 
