@@ -2,17 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CartController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
 // Admin
 Route::post('/v1/register/admin', [\App\Http\Controllers\AuthController::class, 'registerAdmin']);
 Route::post('/v1/login/admin', [\App\Http\Controllers\AuthController::class, 'loginAdmin']);
@@ -28,6 +19,10 @@ Route::apiResource('/v1/products', \App\Http\Controllers\ProductController::clas
 // Categories Resource
 Route::apiResource('/v1/categories', \App\Http\Controllers\CategoryController::class)->middleware('auth:sanctum');
 
+// Add product to cart
+Route::resource('cart', CartController::class)->middleware('auth:sanctum');
+
+
 // Make Order
 Route::post('/v1/orders', [\App\Http\Controllers\OrderController::class, 'buy'])->middleware('auth:sanctum');
 // Get All Orders
@@ -36,9 +31,6 @@ Route::get('/v1/orders', [\App\Http\Controllers\OrderController::class, 'index']
 Route::get('/v1/orders/{id}', [\App\Http\Controllers\OrderController::class, 'show'])->middleware('auth:sanctum');
 
 
-
-// Test webHook
-Route::post('/v1/webhook', [\App\Services\PaymentService::class, 'webHook']);
 // Revoking Tokens
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'logout']);
