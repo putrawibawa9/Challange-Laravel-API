@@ -7,8 +7,11 @@ use Xendit\Invoice;
 use App\Models\Order;
 use Xendit\Configuration;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Xendit\Invoice\InvoiceApi;
 use Xendit\Invoice\CreateInvoiceRequest;
+use App\Mail\SampleEmail;
+
 
 class PaymentService
 {
@@ -41,7 +44,11 @@ class PaymentService
 
     public function webHook(Request $request){
         $apiInstance = new InvoiceApi();
-        $result = $apiInstance->getInvoiceById($request->id);        
+        $result = $apiInstance->getInvoiceById($request->id);  
+        $payer_email = $result['payer_email'];
+        $amount = $result['amount'];
+        $payment_method = $result['payment_method'];
+       
         $order = Order::where('external_id', $result['external_id'])->firstorFail();
         if($order->status == 'settled'){
           return response()->json([
@@ -51,6 +58,7 @@ class PaymentService
         }else{
         $order->status = strtolower($result['status']);
         $order->save();
+        Mail::to('user@example.com')->send(new SampleEmail($payer_email, $amount, $payment_method));
         }
     }
 }
