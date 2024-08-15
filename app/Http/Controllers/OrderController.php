@@ -56,7 +56,6 @@ class OrderController extends Controller
 
     public function buy(Request $request)
     {
-
       // Validate the request
       $validator = Validator::make($request->all(), [
         'items' => 'required|array',

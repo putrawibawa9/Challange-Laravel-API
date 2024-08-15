@@ -2,10 +2,11 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 
 // Admin
-Route::post('/v1/register/admin', [\App\Http\Controllers\AuthController::class, 'registerAdmin']);
+Route::post('/v1/register/admin', [AuthController::class, 'registerAdmin']);
 Route::post('/v1/login/admin', [\App\Http\Controllers\AuthController::class, 'loginAdmin']);
 
 // User
@@ -25,6 +26,9 @@ Route::resource('/v1/carts', CartController::class)->middleware('auth:sanctum');
 
 // Make Order
 Route::post('/v1/orders', [\App\Http\Controllers\OrderController::class, 'buy'])->middleware('auth:sanctum');
+
+// Webhook
+Route::post('/v1/webhook', [\App\Services\PaymentService::class, 'webHook']);
 // Get All Orders
 Route::get('/v1/orders', [\App\Http\Controllers\OrderController::class, 'index'])->middleware('auth:sanctum');
 // Get Single Order
