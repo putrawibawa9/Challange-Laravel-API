@@ -107,7 +107,9 @@ class OrderController extends Controller
     foreach ($order->items as $item) {
         $item->price = 'Rp.'. number_format($item->price, 0,'','.');
     }
-
+    // Add Payer Email
+    $order['payer_email'] = Auth::user()->email;
+ 
     $invoice = $this->paymentService->createInvoice($order);
       return response()->json([
         'message' => 'Order placed successfully',

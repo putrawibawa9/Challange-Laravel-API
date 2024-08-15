@@ -17,13 +17,13 @@ class PaymentService
     {
        Configuration::setXenditKey("xnd_development_ATQsiViNZsT2t9SlNMiNUQRpZP16X2nSnRwfmqD1PGFR6DpErOghC9etR3gNfAbj");
     }
+    
    public function createInvoice($invoiceData){
        $invoiceData->total_price = str_replace(['Rp.', '.'], '', $invoiceData->total_price);
-    //    var_dump($invoiceData->total_price);
-    //    exit;
         $api = new InvoiceApi();
         $create_invoice_request = new CreateInvoiceRequest([
             'external_id' => $invoiceData->external_id,
+            'payer_email' => $invoiceData->payer_email,
             'description' => 'Test Invoice',
             'amount' => $invoiceData->total_price,
             'invoice_duration' => 172800,
@@ -52,6 +52,5 @@ class PaymentService
         $order->status = strtolower($result['status']);
         $order->save();
         }
-        
     }
 }

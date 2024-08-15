@@ -1,41 +1,38 @@
 <?php
 
 use Illuminate\Http\Request;
+use App\Services\PaymentService;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
-
-// Admin
-Route::post('/v1/register/admin', [AuthController::class, 'registerAdmin']);
-Route::post('/v1/login/admin', [\App\Http\Controllers\AuthController::class, 'loginAdmin']);
-
-// User
-Route::post('/v1/register/user', [\App\Http\Controllers\AuthController::class, 'registerUser']);
-Route::post('/v1/login/user', [\App\Http\Controllers\AuthController::class, 'loginUser']);
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CategoryController;
 
 
-// Products Resource
-Route::apiResource('/v1/products', \App\Http\Controllers\ProductController::class)->middleware('auth:sanctum');
 
-// Categories Resource
-Route::apiResource('/v1/categories', \App\Http\Controllers\CategoryController::class)->middleware('auth:sanctum');
-
-// Add product to cart
-Route::resource('/v1/carts', CartController::class)->middleware('auth:sanctum');
-
-
-// Make Order
-Route::post('/v1/orders', [\App\Http\Controllers\OrderController::class, 'buy'])->middleware('auth:sanctum');
-
-// Webhook
-Route::post('/v1/webhook', [\App\Services\PaymentService::class, 'webHook']);
-// Get All Orders
-Route::get('/v1/orders', [\App\Http\Controllers\OrderController::class, 'index'])->middleware('auth:sanctum');
-// Get Single Order
-Route::get('/v1/orders/{id}', [\App\Http\Controllers\OrderController::class, 'show'])->middleware('auth:sanctum');
-
-
-// Revoking Tokens
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'logout']);
+// Public Routes
+Route::prefix('v1')->group(function () {
+    Route::post('/register/user', [AuthController::class, 'registerUser']);
+    Route::post('/login/user', [AuthController::class, 'loginUser']);
+    Route::post('/register/admin', [AuthController::class, 'registerAdmin']);
+    Route::post('/login/admin', [AuthController::class, 'loginAdmin']);
+    Route::post('/webhook', [PaymentService::class, 'webHook']);
+    Route::post('/logout', [AuthController::class, 'logout']);
 });
+
+// Admin Routes
+Route::middleware('auth:sanctum')->prefix('v1')->group(function(){
+    Route::apiResource('/products', ProductController::class);
+    Route::apiResource('/categories', CategoryController::class);
+});
+
+// User Routes
+Route::middleware('auth:sanctum')->prefix('v1')->group(function(){
+    Route::resource('/carts', CartController::class)->middleware('auth:sanctum');
+    Route::post('/orders', [OrderController::class, 'buy'])->middleware('auth:sanctum');
+    Route::get('/orders', [OrderController::class, 'index'])->middleware('auth:sanctum');
+    Route::get('/orders/{id}', [OrderController::class, 'show'])->middleware('auth:sanctum');
+});
+
+;
