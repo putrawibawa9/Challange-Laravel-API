@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Rating;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -33,16 +34,16 @@ class RatingController extends Controller
         return response()->json(['message' => 'Rating submitted successfully']);
     }
 
-    public function index($productId)
+    public function index($slug)
     {
-        $ratings = Rating::where('product_id', $productId)->get();
+        $ratings = Product::with('ratings')->where('slug', $slug)->first()->ratings;
 
         return response()->json(['message' => 'Ratings retrieved successfully', 'data' => $ratings]);
     }
 
-    public function averageRating($productId)
+    public function averageRating($slug)
     {
-        $average = Rating::where('product_id', $productId)->avg('rating');
+        $average = Product::with('ratings')->where('slug', $slug)->first()->ratings->avg('rating');
 
         // Round the ratings to 1 decimal place
         $average = round($average, 1);
