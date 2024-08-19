@@ -25,8 +25,12 @@ class OrderController extends Controller
     }
 
     public function index(){
-        // Get all orders
-     $orders = Order::latest()->get();
+        // Check the user data from token
+        $user = Auth::user();
+        
+        // Retrieve the orders
+        $orders = Order::where('user_id', $user->id)->get();
+  
 
         // Format the total price to IDR
         foreach ($orders as $order) {

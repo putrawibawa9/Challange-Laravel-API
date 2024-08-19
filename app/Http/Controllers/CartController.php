@@ -45,7 +45,7 @@ class CartController extends Controller
     $user = Auth::user();
 
     // Find or create a cart for the user
-    $cart = Cart::firstOrCreate(['user_id' => $user->id]);
+    $cart = Cart::firstOrCreate(['user_id' => $user->id])->with('cartItems.product')->first();
 
     // Iterate over the products array
     foreach ($request->input('items') as $product) {
@@ -63,7 +63,7 @@ class CartController extends Controller
             $cartItem->save();
         } else {
             // Add the product to the cart if it's not already there
-            CartItem::create([
+           CartItem::create([
                 'cart_id' => $cart->id,
                 'product_id' => $productId,
                 'quantity' => $quantity,
@@ -71,7 +71,7 @@ class CartController extends Controller
         }
     }
 
-    return response()->json(['message' => 'Products added to cart successfully!'], 200);
+    return response()->json(['message' => 'Products added to cart successfully!', 'data' => $cart], 200);
 }
 
     /**
