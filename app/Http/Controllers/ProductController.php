@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Mail\SampleEmail;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use App\Http\Resources\ProductResource;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\SampleEmail;
 
 class ProductController extends Controller
 {
@@ -78,13 +79,17 @@ class ProductController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Product $product)
+    public function show( $slug)
     {
         // check if the token is valid
         if (!Auth::user()->tokenCan('read')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
-
+        $product = Product::where('slug', $slug)->first();
+        // return if there is no such data
+        if (!$product) {
+           abort(404, 'Product not found');
+        }
         return new ProductResource('Product retrieved successfully', $product);
     }
 
@@ -99,55 +104,62 @@ class ProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Product $product)
+    public function update(Request $request, $slug)
     {
-        // check if the token is valid
+        // Find the product by slug
+        $product = Product::where('slug', $slug)->firstOrFail();
+
+        // Check if the token is valid
         if (!Auth::user()->tokenCan('update')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        //define validation rules
-        $validator = Validator::make($request->all(), [
-            'name'       => 'required|string|max:255',
-            'description'     => 'required|string',
-            'price'      => 'required|numeric',
-            'stock' => 'required|numeric',
-            'category_id' => 'required|numeric',
-        ]);
+        // Update product details
+        $product->fill($request->all());
 
-        //check if validation fails
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+        // Check if the name (or relevant field) has changed
+        if ($request->has('name') && $product->isDirty('name')) {
+            $product->slug = $this->generateUniqueSlug($request->input('name'));
         }
 
-        //update Post
-        $product->update([
-            'name' => $request->name,
-            'description' => $request->description,
-            'price' => $request->price,
-            'stock' => $request->stock,
-            'category_id' => $request->category_id,
-        ]);
+        $product->save();
 
-        //return success response
-        return response()->json([
-            'code' => '200',
-            'message' => 'Product updated successfully',
-            'data' => $product,
-        ]);
+        return response()->json(['message' => 'Product updated successfully', 'product' => new ProductResource('Product has changed',$product)]);
     }
+
+    protected function generateUniqueSlug($name)
+    {
+        $slug = Str::slug($name);
+        $originalSlug = $slug;
+        $i = 1;
+
+        // Ensure uniqueness
+        while (Product::where('slug', $slug)->exists()) {
+            $slug = $originalSlug . '-' . $i;
+            $i++;
+        }
+
+        return $slug;
+    }
+
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy($slug)
     {
-        // search the data on database
-        $product = Product::find($id);
+      
 
         // check if the token is valid
         if (!Auth::user()->tokenCan('delete')) {
             return response()->json(['message' => 'Unauthorized'], 403);
+        }
+          // search the data on database
+        $product = Product::where('slug', $slug)->first();
+
+        // return if there is no such data
+        if (!$product) {
+            abort(404, 'Product not found');
         }
         // delete the data
         $product->delete();
