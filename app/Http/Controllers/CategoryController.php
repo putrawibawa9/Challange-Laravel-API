@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\CategoryResource;
@@ -72,16 +73,16 @@ class CategoryController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($slug)
     {
         // check if the token is valid
         if (!Auth::user()->tokenCan('read')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
         // Retrieve a single category with its products
-        $category = Category::with('products')->find($id);
+        $category = Category::with('products')->where('slug', $slug)->first();
         if (!$category) {
-            return response()->json(['message' => 'Category not found'], 404);
+          abort(404, 'Category not found');
         }
         return new CategoryResource('Category retrieved successfully', $category);
     }
@@ -97,43 +98,65 @@ class CategoryController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $slug)
     {
-        // check if user has ability to update
+        // Check if the user has the ability to update
         if (!Auth::user()->tokenCan('update')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
-        // update category
-        $category = Category::find($id);
-        if (!$category) {
-            return response()->json(['message' => 'Category not found'], 404);
-        }
-        //define validation rules
+
+        // Find the category by slug
+        $category = Category::where('slug', $slug)->firstOrFail();
+
+        // Define validation rules
         $validator = Validator::make($request->all(), [
-            'name'       => 'required|string|max:255',
+            'name' => 'required|string|max:255',
         ]);
-        // check if validation fails
+
+        // Check if validation fails
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
-        // update category
-        $category->update([
-            'name' => $request->name,
-        ]);
+
+        // Update category details
+        $category->fill($request->all());
+
+        // Check if the name (or relevant field) has changed
+        if ($request->has('name') && $category->isDirty('name')) {
+            $category->slug = $this->generateUniqueSlug($request->input('name'));
+        }
+
+        $category->save();
+
         return new CategoryResource('Category updated successfully', $category);
+    }
+
+    protected function generateUniqueSlug($name)
+    {
+        $slug = Str::slug($name);
+        $originalSlug = $slug;
+        $i = 1;
+
+        // Ensure uniqueness
+        while (Category::where('slug', $slug)->exists()) {
+            $slug = $originalSlug . '-' . $i;
+            $i++;
+        }
+
+        return $slug;
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(string $slug)
     {
         //check if user has ability to delete
         if (!Auth::user()->tokenCan('delete')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
         // delete category
-        $category = Category::find($id);
+        $category = Category::where('slug', $slug)->first();
         if (!$category) {
             return response()->json(['message' => 'Category not found'], 404);
         }
