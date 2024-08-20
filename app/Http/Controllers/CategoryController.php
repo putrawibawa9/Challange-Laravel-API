@@ -22,7 +22,7 @@ class CategoryController extends Controller
         return response()->json(['message' => 'Token not provided or invalid'], 401);
     }
         // check if the token is valid
-           if (!$user->tokenCan('read')) {
+           if (!$user->tokenCan('admin') && !$user->tokenCan('user')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
         // Retrieve all categories with their products
@@ -47,7 +47,7 @@ class CategoryController extends Controller
     {
 
             // check if user has ability to create
-        if (!Auth::user()->tokenCan('create')) {
+        if (!Auth::user()->tokenCan('admin')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -76,7 +76,7 @@ class CategoryController extends Controller
     public function show($slug)
     {
         // check if the token is valid
-        if (!Auth::user()->tokenCan('read')) {
+        if (!Auth::user()->tokenCan('admin') && Auth::user()->tokenCan('user')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
         // Retrieve a single category with its products
@@ -101,7 +101,7 @@ class CategoryController extends Controller
     public function update(Request $request, string $slug)
     {
         // Check if the user has the ability to update
-        if (!Auth::user()->tokenCan('update')) {
+        if (!Auth::user()->tokenCan('admin')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -152,7 +152,7 @@ class CategoryController extends Controller
     public function destroy(string $slug)
     {
         //check if user has ability to delete
-        if (!Auth::user()->tokenCan('delete')) {
+        if (!Auth::user()->tokenCan('admin')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
         // delete category

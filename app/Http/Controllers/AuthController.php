@@ -29,7 +29,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password)
         ]);
- $abilities = ['create', 'update', 'delete', 'read'];
+ $abilities = ['admin'];
         $token = $admin->createToken('auth_token', $abilities)->plainTextToken;
 
         return response()->json([
@@ -55,7 +55,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password)
         ]);
-        $abilities = ['read', 'create'];
+        $abilities = ['user'];
         $token = $user->createToken('auth_token', $abilities)->plainTextToken;
 
         return response()->json([
@@ -82,7 +82,7 @@ class AuthController extends Controller
         }
 
         $user = User::where('email', $request->email)->firstOrFail();
-        $abilities = ['read', 'create'];
+        $abilities = ['user'];
         $token = $user->createToken('auth_token', $abilities)->plainTextToken;
 
         return response()->json([
@@ -110,7 +110,7 @@ class AuthController extends Controller
             ], 401);
         }
         $admin = Admin::where('email', $request->email)->firstOrFail();
-          $abilities = ['create', 'update', 'delete', 'read'];
+          $abilities = ['admin'];
 
         $token = $admin->createToken('auth_token',$abilities)->plainTextToken;
 

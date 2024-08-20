@@ -20,7 +20,7 @@ class ProductController extends Controller
     {
            $user = Auth::user();
         // check if the token is valid
-           if (!$user->tokenCan('read')) {
+           if (!$user->tokenCan('admin') && !$user->tokenCan('user')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
        $products = Product::orderBy('created_at', 'desc')->paginate(5); // 10 is the number of items per page
@@ -41,7 +41,7 @@ class ProductController extends Controller
     public function store(Request $request)
     {
           // check if user has ability to create
-        if (!Auth::user()->tokenCan('create')) {
+        if (!Auth::user()->tokenCan('admin')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -82,7 +82,7 @@ class ProductController extends Controller
     public function show( $slug)
     {
         // check if the token is valid
-        if (!Auth::user()->tokenCan('read')) {
+        if (!Auth::user()->tokenCan('admin') && Auth::user()->tokenCan('user')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
         $product = Product::where('slug', $slug)->first();
@@ -110,7 +110,7 @@ class ProductController extends Controller
         $product = Product::where('slug', $slug)->firstOrFail();
 
         // Check if the token is valid
-        if (!Auth::user()->tokenCan('update')) {
+        if (!Auth::user()->tokenCan('admin')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -151,7 +151,7 @@ class ProductController extends Controller
       
 
         // check if the token is valid
-        if (!Auth::user()->tokenCan('delete')) {
+        if (!Auth::user()->tokenCan('admin')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
           // search the data on database
