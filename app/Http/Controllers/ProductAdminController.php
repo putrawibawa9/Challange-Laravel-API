@@ -11,18 +11,13 @@ use Illuminate\Support\Facades\Mail;
 use App\Http\Resources\ProductResource;
 use Illuminate\Support\Facades\Validator;
 
-class ProductController extends Controller
+class ProductAdminController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-           $user = Auth::user();
-        // check if the token is valid
-           if (!$user->tokenCan('admin') && !$user->tokenCan('user')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
        $products = Product::orderBy('created_at', 'desc')->paginate(5); // 10 is the number of items per page
         return new ProductResource('Products retrieved successfully', $products);
     }
@@ -40,9 +35,6 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-          // check if user has ability to create
-
-
         //define validation rules
         $validator = Validator::make($request->all(), [
         'name'       => 'required|string|max:255',
@@ -79,10 +71,6 @@ class ProductController extends Controller
      */
     public function show( $slug)
     {
-        // check if the token is valid
-        if (!Auth::user()->tokenCan('admin') && Auth::user()->tokenCan('user')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
         $product = Product::where('slug', $slug)->first();
         // return if there is no such data
         if (!$product) {
@@ -106,12 +94,7 @@ class ProductController extends Controller
     {
         // Find the product by slug
         $product = Product::where('slug', $slug)->firstOrFail();
-
-        // Check if the token is valid
-        if (!Auth::user()->tokenCan('admin')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
+      
         // Update product details
         $product->fill($request->all());
 
@@ -147,11 +130,6 @@ class ProductController extends Controller
     public function destroy($slug)
     {
       
-
-        // check if the token is valid
-        if (!Auth::user()->tokenCan('admin')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
           // search the data on database
         $product = Product::where('slug', $slug)->first();
 

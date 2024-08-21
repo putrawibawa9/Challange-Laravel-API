@@ -9,22 +9,13 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\CategoryResource;
 use Illuminate\Support\Facades\Validator;
 
-class CategoryController extends Controller
+class CategoryAdminController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-    // check the user's token ability
-         $user = Auth::user();
-           if (!$user) {
-        return response()->json(['message' => 'Token not provided or invalid'], 401);
-    }
-        // check if the token is valid
-           if (!$user->tokenCan('admin') && !$user->tokenCan('user')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
         // Retrieve all categories with their products
         $categories = Category::paginate(5);
 
@@ -46,10 +37,6 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
 
-            // check if user has ability to create
-        if (!Auth::user()->tokenCan('admin')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
 
         //define validation rules
         $validator = Validator::make($request->all(), [
@@ -75,10 +62,6 @@ class CategoryController extends Controller
      */
     public function show($slug)
     {
-        // check if the token is valid
-        if (!Auth::user()->tokenCan('admin') && Auth::user()->tokenCan('user')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
         // Retrieve a single category with its products
         $category = Category::with('products')->where('slug', $slug)->first();
         if (!$category) {
@@ -100,11 +83,6 @@ class CategoryController extends Controller
      */
     public function update(Request $request, string $slug)
     {
-        // Check if the user has the ability to update
-        if (!Auth::user()->tokenCan('admin')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         // Find the category by slug
         $category = Category::where('slug', $slug)->firstOrFail();
 
@@ -151,10 +129,6 @@ class CategoryController extends Controller
      */
     public function destroy(string $slug)
     {
-        //check if user has ability to delete
-        if (!Auth::user()->tokenCan('admin')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
         // delete category
         $category = Category::where('slug', $slug)->first();
         if (!$category) {
