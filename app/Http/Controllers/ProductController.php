@@ -41,9 +41,7 @@ class ProductController extends Controller
     public function store(Request $request)
     {
           // check if user has ability to create
-        if (!Auth::user()->tokenCan('admin')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
+
 
         //define validation rules
         $validator = Validator::make($request->all(), [

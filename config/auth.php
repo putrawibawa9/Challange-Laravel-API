@@ -40,6 +40,16 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'api' => [
+            'driver' => 'sanctum', // or 'token' if you're using Laravel Passport
+            'provider' => 'users',
+            'hash' => false, // set to true if you're hashing tokens in the database
+        ],
+        'admin' => [
+            'driver' => 'sanctum', // or 'token' if using Laravel Passport
+            'provider' => 'admins', // This points to a different provider
+            'hash' => false,
+        ],
     ],
 
  
@@ -66,6 +76,10 @@ return [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\User::class),
         ],
+        'admins' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\Admin::class, // This is your Admin model
+    ],
 
         // 'users' => [
         //     'driver' => 'database',
